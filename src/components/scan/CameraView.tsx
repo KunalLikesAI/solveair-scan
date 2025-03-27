@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Camera, X, Image, RefreshCw } from 'lucide-react';
+import { Camera, X, Image, RefreshCw, ScanLine, Focus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface CameraViewProps {
@@ -11,16 +11,23 @@ const CameraView: React.FC<CameraViewProps> = ({ onCapture }) => {
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [isScanning, setIsScanning] = useState(false);
+  const [flashMode, setFlashMode] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const scanLineRef = useRef<HTMLDivElement>(null);
 
   // Start camera
   const startCamera = async () => {
     try {
       setCameraError(null);
       const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'environment' }
+        video: { 
+          facingMode: 'environment',
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
       });
       
       if (videoRef.current) {
@@ -46,18 +53,54 @@ const CameraView: React.FC<CameraViewProps> = ({ onCapture }) => {
   // Capture image
   const captureImage = () => {
     if (videoRef.current && canvasRef.current) {
-      const video = videoRef.current;
-      const canvas = canvasRef.current;
+      // Start scanning animation
+      setIsScanning(true);
       
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const imageData = canvas.toDataURL('image/jpeg');
-        setCapturedImage(imageData);
-        stopCamera();
+      // Simulate ML Kit processing delay
+      setTimeout(() => {
+        const video = videoRef.current;
+        const canvas = canvasRef.current;
+        
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          
+          // Apply contrast enhancement and auto-crop simulation
+          // In a real app, this would use actual image processing algorithms
+          // For demo purposes, we're just adding this comment to indicate the capability
+          
+          const imageData = canvas.toDataURL('image/jpeg');
+          setCapturedImage(imageData);
+          stopCamera();
+          setIsScanning(false);
+        }
+      }, 1500);
+    }
+  };
+
+  // Toggle flash
+  const toggleFlash = () => {
+    if (streamRef.current) {
+      const tracks = streamRef.current.getVideoTracks();
+      if (tracks.length > 0) {
+        const capabilities = tracks[0].getCapabilities();
+        // Check if torch (flash) is supported
+        if (capabilities.torch) {
+          const newFlashMode = !flashMode;
+          tracks[0].applyConstraints({
+            advanced: [{ torch: newFlashMode }]
+          }).then(() => {
+            setFlashMode(newFlashMode);
+          }).catch(e => {
+            console.error('Error toggling flash:', e);
+          });
+        } else {
+          // Flash not supported on this device
+          console.log('Flash not supported on this device');
+        }
       }
     }
   };
@@ -74,6 +117,26 @@ const CameraView: React.FC<CameraViewProps> = ({ onCapture }) => {
       onCapture(capturedImage);
     }
   };
+
+  // Animate scan line
+  useEffect(() => {
+    if (isScanning && scanLineRef.current) {
+      // Simple animation for scan line
+      let position = 0;
+      const height = scanLineRef.current.parentElement?.clientHeight || 300;
+      const interval = setInterval(() => {
+        position += 5;
+        if (position > height) {
+          position = 0;
+        }
+        if (scanLineRef.current) {
+          scanLineRef.current.style.top = `${position}px`;
+        }
+      }, 50);
+      
+      return () => clearInterval(interval);
+    }
+  }, [isScanning]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -94,9 +157,34 @@ const CameraView: React.FC<CameraViewProps> = ({ onCapture }) => {
               playsInline 
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 border-2 border-white/30 border-dashed pointer-events-none" />
             
-            <div className="absolute top-4 right-4">
+            {/* Scanning guide */}
+            <div className="absolute inset-0 border-2 border-primary/30 border-dashed pointer-events-none" />
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="w-4/5 h-1/3 border-2 border-primary rounded-lg"></div>
+            </div>
+            
+            {/* Scanning animation */}
+            {isScanning && (
+              <div 
+                ref={scanLineRef}
+                className="absolute left-0 right-0 h-0.5 bg-primary pointer-events-none"
+                style={{
+                  boxShadow: '0 0 8px rgba(59, 130, 246, 0.8), 0 0 20px rgba(59, 130, 246, 0.6)'
+                }}
+              ></div>
+            )}
+            
+            {/* Camera controls */}
+            <div className="absolute top-4 right-4 flex space-x-2">
+              <Button 
+                variant="outline" 
+                size="icon"
+                className="rounded-full bg-black/20 backdrop-blur-sm border-white/10 text-white hover:bg-black/30"
+                onClick={toggleFlash}
+              >
+                <div className={`w-3 h-3 rounded-full ${flashMode ? 'bg-yellow-400' : 'bg-gray-400'}`}></div>
+              </Button>
               <Button 
                 variant="outline" 
                 size="icon" 
@@ -161,15 +249,26 @@ const CameraView: React.FC<CameraViewProps> = ({ onCapture }) => {
       </div>
       
       {/* Camera controls */}
-      {isCameraActive && !capturedImage && (
+      {isCameraActive && !capturedImage && !isScanning && (
         <div className="mt-6 flex justify-center">
           <Button 
             size="lg" 
             className="rounded-full w-16 h-16 p-0 flex items-center justify-center shadow-lg"
             onClick={captureImage}
+            disabled={isScanning}
           >
             <div className="w-12 h-12 rounded-full border-2 border-white" />
           </Button>
+        </div>
+      )}
+      
+      {/* Scanning indicator */}
+      {isScanning && (
+        <div className="mt-6 flex justify-center">
+          <div className="px-4 py-2 bg-black/20 backdrop-blur-sm rounded-full text-white flex items-center space-x-2">
+            <div className="w-3 h-3 bg-primary rounded-full animate-pulse"></div>
+            <span>Scanning equation...</span>
+          </div>
         </div>
       )}
       
@@ -181,8 +280,8 @@ const CameraView: React.FC<CameraViewProps> = ({ onCapture }) => {
             Retake
           </Button>
           <Button onClick={confirmImage}>
-            <Image className="w-4 h-4 mr-2" />
-            Use Image
+            <Focus className="w-4 h-4 mr-2" />
+            Process Equation
           </Button>
         </div>
       )}

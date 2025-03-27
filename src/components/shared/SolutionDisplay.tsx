@@ -3,19 +3,24 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Copy, Check, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import { Progress } from '@/components/ui/progress';
 
 interface SolutionDisplayProps {
   equation: string;
   solution: string;
   steps: string[];
   isLoading?: boolean;
+  progress?: number;
+  processingPhase?: 'recognizing' | 'solving';
 }
 
 const SolutionDisplay: React.FC<SolutionDisplayProps> = ({ 
   equation, 
   solution,
   steps,
-  isLoading = false
+  isLoading = false,
+  progress = 0,
+  processingPhase = 'solving'
 }) => {
   const { toast } = useToast();
   const [copied, setCopied] = React.useState(false);
@@ -47,7 +52,17 @@ const SolutionDisplay: React.FC<SolutionDisplayProps> = ({
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-8">
             <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p className="text-gray-600 dark:text-gray-400">Solving equation...</p>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              {processingPhase === 'recognizing' 
+                ? 'Preprocessing and recognizing equation...' 
+                : 'Solving equation...'}
+            </p>
+            {progress > 0 && (
+              <div className="w-full max-w-xs">
+                <Progress value={progress} className="h-2" />
+                <p className="text-xs text-gray-500 text-right mt-1">{progress}%</p>
+              </div>
+            )}
           </div>
         ) : (
           <>

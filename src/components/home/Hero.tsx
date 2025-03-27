@@ -22,7 +22,7 @@ const Hero = () => {
           </h1>
           
           <p className="text-lg text-gray-600 mb-8 animate-slide-up" style={{ animationDelay: '100ms' }}>
-            AIRMATH makes math easy by letting you scan equations with your camera 
+            SolveAir makes math easy by letting you scan equations with your camera 
             or draw them in the air. Get instant solutions with step-by-step explanations.
           </p>
           

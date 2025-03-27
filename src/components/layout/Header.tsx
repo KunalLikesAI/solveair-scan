@@ -9,7 +9,7 @@ const Header = () => {
     <header className="w-full py-4 px-6 sm:px-8 flex items-center justify-between border-b border-gray-100 backdrop-blur-md bg-white/70 fixed top-0 left-0 right-0 z-50">
       <Link to="/" className="flex items-center space-x-2 text-primary font-medium">
         <Calculator className="h-5 w-5" />
-        <span className="text-xl font-semibold tracking-tight">AIRMATH</span>
+        <span className="text-xl font-semibold tracking-tight">SolveAir</span>
       </Link>
       
       <nav className="hidden md:flex items-center space-x-8">

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Copy, Check, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from '@/components/ui/progress';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface SolutionDisplayProps {
   equation: string;

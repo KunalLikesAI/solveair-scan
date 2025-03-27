@@ -81,25 +81,31 @@ const CameraView: React.FC<CameraViewProps> = ({ onCapture }) => {
     }
   };
 
-  // Toggle flash
+  // Toggle flash - Modified to handle browsers that don't support torch
   const toggleFlash = () => {
     if (streamRef.current) {
       const tracks = streamRef.current.getVideoTracks();
       if (tracks.length > 0) {
-        const capabilities = tracks[0].getCapabilities();
-        // Check if torch (flash) is supported
-        if (capabilities.torch) {
-          const newFlashMode = !flashMode;
-          tracks[0].applyConstraints({
-            advanced: [{ torch: newFlashMode }]
-          }).then(() => {
-            setFlashMode(newFlashMode);
-          }).catch(e => {
-            console.error('Error toggling flash:', e);
-          });
-        } else {
-          // Flash not supported on this device
-          console.log('Flash not supported on this device');
+        try {
+          // Try to access advanced features if available
+          const capabilities = tracks[0].getCapabilities();
+          const hasFlash = 'torch' in capabilities;
+          
+          if (hasFlash) {
+            const newFlashMode = !flashMode;
+            // Use advanced constraints with torch if supported
+            tracks[0].applyConstraints({
+              advanced: [{ torch: newFlashMode } as any]
+            }).then(() => {
+              setFlashMode(newFlashMode);
+            }).catch(e => {
+              console.error('Error toggling flash:', e);
+            });
+          } else {
+            console.log('Flash not supported on this device');
+          }
+        } catch (error) {
+          console.log('Flash control not supported in this browser');
         }
       }
     }

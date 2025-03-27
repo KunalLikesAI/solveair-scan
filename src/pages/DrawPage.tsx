@@ -2,10 +2,11 @@
 import React, { useState } from 'react';
 import Layout from '@/components/layout/Layout';
 import DrawingCanvas from '@/components/draw/DrawingCanvas';
+import AirDrawingCanvas from '@/components/draw/AirDrawingCanvas';
 import SolutionDisplay from '@/components/shared/SolutionDisplay';
 import { processEquationImage, solveEquation, SolveResult } from '@/utils/mathSolver';
 import { Button } from '@/components/ui/button';
-import { History } from 'lucide-react';
+import { History, Pencil, Hand } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const DrawPage = () => {
@@ -14,6 +15,7 @@ const DrawPage = () => {
   const [solution, setSolution] = useState<SolveResult | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSolving, setIsSolving] = useState(false);
+  const [drawingMode, setDrawingMode] = useState<'manual' | 'air'>('manual');
   const { toast } = useToast();
   
   // Handle drawing completion
@@ -54,19 +56,70 @@ const DrawPage = () => {
   return (
     <Layout>
       <div className="max-w-4xl mx-auto px-6 py-12">
-        <div className="text-center mb-12">
+        <div className="text-center mb-8">
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
             Draw & Solve
           </h1>
           <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
             Draw your math equation on the canvas and get an instant solution with step-by-step explanations.
           </p>
+          
+          {/* Drawing mode toggle */}
+          <div className="flex justify-center mt-6">
+            <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-1 inline-flex">
+              <Button 
+                variant={drawingMode === 'manual' ? "default" : "ghost"} 
+                size="sm"
+                onClick={() => setDrawingMode('manual')}
+                className="flex items-center"
+              >
+                <Pencil className="w-4 h-4 mr-2" />
+                Manual Draw
+              </Button>
+              <Button 
+                variant={drawingMode === 'air' ? "default" : "ghost"} 
+                size="sm"
+                onClick={() => setDrawingMode('air')}
+                className="flex items-center"
+              >
+                <Hand className="w-4 h-4 mr-2" />
+                Air Draw
+              </Button>
+            </div>
+          </div>
+          
+          {/* Gesture guide for air drawing */}
+          {drawingMode === 'air' && !solution && (
+            <div className="mt-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 max-w-xl mx-auto">
+              <h3 className="font-semibold text-purple-800 dark:text-purple-300 mb-2">Gesture Guide</h3>
+              <div className="grid grid-cols-3 gap-2 text-sm">
+                <div className="p-2 bg-white dark:bg-gray-800 rounded-lg">
+                  <p className="font-semibold text-gray-900 dark:text-gray-100">1 Finger</p>
+                  <p className="text-gray-600 dark:text-gray-400">Draw Mode</p>
+                </div>
+                <div className="p-2 bg-white dark:bg-gray-800 rounded-lg">
+                  <p className="font-semibold text-gray-900 dark:text-gray-100">2 Fingers</p>
+                  <p className="text-gray-600 dark:text-gray-400">Pause/Next</p>
+                </div>
+                <div className="p-2 bg-white dark:bg-gray-800 rounded-lg">
+                  <p className="font-semibold text-gray-900 dark:text-gray-100">3 Fingers</p>
+                  <p className="text-gray-600 dark:text-gray-400">Solve</p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div>
             {!solution ? (
-              <DrawingCanvas onDrawingComplete={handleDrawingComplete} />
+              <>
+                {drawingMode === 'manual' ? (
+                  <DrawingCanvas onDrawingComplete={handleDrawingComplete} />
+                ) : (
+                  <AirDrawingCanvas onDrawingComplete={handleDrawingComplete} />
+                )}
+              </>
             ) : (
               <div className="glass-card rounded-xl overflow-hidden">
                 <div className="aspect-[4/3] bg-white relative">
@@ -124,7 +177,9 @@ const DrawPage = () => {
                     Solution Will Appear Here
                   </h3>
                   <p className="text-gray-600 dark:text-gray-400 text-center">
-                    Draw a math equation on the canvas to see its solution and step-by-step explanation.
+                    {drawingMode === 'manual' 
+                      ? "Draw a math equation on the canvas to see its solution and step-by-step explanation."
+                      : "Use hand gestures to draw in the air. The solution will appear once you complete the equation."}
                   </p>
                 </div>
               </div>

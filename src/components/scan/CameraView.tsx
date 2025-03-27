@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Camera, X, Image, RefreshCw, ScanLine, Focus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 
 interface CameraViewProps {
   onCapture: (imageData: string) => void;
@@ -13,13 +14,30 @@ const CameraView: React.FC<CameraViewProps> = ({ onCapture }) => {
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [flashMode, setFlashMode] = useState(false);
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const scanLineRef = useRef<HTMLDivElement>(null);
 
-  // Start camera
-  const startCamera = async () => {
+  // Check if running in Capacitor (mobile)
+  useEffect(() => {
+    const checkPlatform = async () => {
+      try {
+        // Simple check if we're running on mobile
+        const isMobile = 'capacitor' in window || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        setIsMobileDevice(isMobile);
+      } catch (error) {
+        console.log('Not running in Capacitor environment');
+        setIsMobileDevice(false);
+      }
+    };
+    
+    checkPlatform();
+  }, []);
+
+  // Start web camera
+  const startWebCamera = async () => {
     try {
       setCameraError(null);
       const stream = await navigator.mediaDevices.getUserMedia({ 
@@ -41,17 +59,56 @@ const CameraView: React.FC<CameraViewProps> = ({ onCapture }) => {
     }
   };
 
+  // Use Capacitor Camera on mobile devices
+  const takePictureWithCapacitor = async () => {
+    try {
+      setCameraError(null);
+      setIsScanning(true);
+      
+      const image = await CapacitorCamera.getPhoto({
+        quality: 90,
+        allowEditing: false,
+        resultType: CameraResultType.DataUrl,
+        source: CameraSource.Camera,
+        width: 1280,
+        height: 720,
+        correctOrientation: true,
+      });
+      
+      if (image && image.dataUrl) {
+        setCapturedImage(image.dataUrl);
+        setIsScanning(false);
+        setIsCameraActive(false);
+      }
+    } catch (error) {
+      console.error('Error taking picture with Capacitor:', error);
+      setCameraError('Unable to capture image. Please try again.');
+      setIsScanning(false);
+    }
+  };
+
+  // Start camera based on platform
+  const startCamera = async () => {
+    if (isMobileDevice) {
+      // On mobile, we'll set isCameraActive to true but use takePictureWithCapacitor when needed
+      setIsCameraActive(true);
+    } else {
+      // On web, use the web camera API
+      await startWebCamera();
+    }
+  };
+
   // Stop camera
   const stopCamera = () => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
-      setIsCameraActive(false);
     }
+    setIsCameraActive(false);
   };
 
-  // Capture image
-  const captureImage = () => {
+  // Capture image on web
+  const captureWebImage = () => {
     if (videoRef.current && canvasRef.current) {
       // Start scanning animation
       setIsScanning(true);
@@ -61,23 +118,33 @@ const CameraView: React.FC<CameraViewProps> = ({ onCapture }) => {
         const video = videoRef.current;
         const canvas = canvasRef.current;
         
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        if (video && canvas) {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
           
-          // Apply contrast enhancement and auto-crop simulation
-          // In a real app, this would use actual image processing algorithms
-          // For demo purposes, we're just adding this comment to indicate the capability
-          
-          const imageData = canvas.toDataURL('image/jpeg');
-          setCapturedImage(imageData);
-          stopCamera();
-          setIsScanning(false);
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            // Apply contrast enhancement and auto-crop simulation
+            // In a real app, this would use actual image processing algorithms
+            
+            const imageData = canvas.toDataURL('image/jpeg');
+            setCapturedImage(imageData);
+            stopCamera();
+            setIsScanning(false);
+          }
         }
       }, 1500);
+    }
+  };
+
+  // Capture image (handles both web and mobile)
+  const captureImage = () => {
+    if (isMobileDevice) {
+      takePictureWithCapacitor();
+    } else {
+      captureWebImage();
     }
   };
 
@@ -154,8 +221,8 @@ const CameraView: React.FC<CameraViewProps> = ({ onCapture }) => {
   return (
     <div className="w-full">
       <div className="glass-card rounded-xl overflow-hidden relative">
-        {/* Camera view */}
-        {isCameraActive && !capturedImage && (
+        {/* Camera view - Web only */}
+        {isCameraActive && !capturedImage && !isMobileDevice && (
           <div className="aspect-[4/3] bg-gray-900 relative">
             <video 
               ref={videoRef} 
@@ -181,7 +248,7 @@ const CameraView: React.FC<CameraViewProps> = ({ onCapture }) => {
               ></div>
             )}
             
-            {/* Camera controls */}
+            {/* Camera controls - Web only */}
             <div className="absolute top-4 right-4 flex space-x-2">
               <Button 
                 variant="outline" 
@@ -199,6 +266,26 @@ const CameraView: React.FC<CameraViewProps> = ({ onCapture }) => {
               >
                 <X className="w-4 h-4" />
               </Button>
+            </div>
+          </div>
+        )}
+        
+        {/* Mobile camera placeholder - shows when camera would be active on mobile */}
+        {isCameraActive && !capturedImage && isMobileDevice && !isScanning && (
+          <div className="aspect-[4/3] bg-gray-900 flex items-center justify-center">
+            <div className="text-center text-white p-4">
+              <Camera className="w-12 h-12 mx-auto mb-2 text-primary" />
+              <p>Tap the button below to take a picture</p>
+            </div>
+          </div>
+        )}
+        
+        {/* Mobile scanning indicator */}
+        {isScanning && isMobileDevice && (
+          <div className="aspect-[4/3] bg-gray-900 flex items-center justify-center">
+            <div className="text-center text-white">
+              <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p>Processing image...</p>
             </div>
           </div>
         )}
@@ -269,7 +356,7 @@ const CameraView: React.FC<CameraViewProps> = ({ onCapture }) => {
       )}
       
       {/* Scanning indicator */}
-      {isScanning && (
+      {isScanning && !isMobileDevice && (
         <div className="mt-6 flex justify-center">
           <div className="px-4 py-2 bg-black/20 backdrop-blur-sm rounded-full text-white flex items-center space-x-2">
             <div className="w-3 h-3 bg-primary rounded-full animate-pulse"></div>

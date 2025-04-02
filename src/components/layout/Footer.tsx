@@ -11,7 +11,7 @@ const Footer = () => {
           <div>
             <div className="flex items-center space-x-2 text-primary font-medium mb-4">
               <Calculator className="h-5 w-5" />
-              <span className="text-xl font-semibold tracking-tight">SolveAir</span>
+              <span className="text-xl font-semibold tracking-tight">AIRMATH</span>
             </div>
             <p className="text-gray-500 text-sm">
               Solve math problems using camera scanning or drawing equations in the air.
@@ -54,7 +54,7 @@ const Footer = () => {
         
         <div className="border-t border-gray-100 mt-10 pt-6 flex flex-col md:flex-row items-center justify-between">
           <p className="text-gray-400 text-sm">
-            © {new Date().getFullYear()} SolveAir. All rights reserved.
+            © {new Date().getFullYear()} AIRMATH. All rights reserved.
           </p>
           
           <div className="flex items-center space-x-4 mt-4 md:mt-0">

@@ -13,41 +13,43 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
   const [hasDrawing, setHasDrawing] = useState(false);
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
   
+  // Initialize canvas
   useEffect(() => {
     const canvas = canvasRef.current;
     if (canvas) {
-      // Set higher resolution for better quality
+      // Set canvas dimensions with higher resolution for better quality
       const rect = canvas.getBoundingClientRect();
       canvas.width = rect.width * 2;
       canvas.height = rect.height * 2;
       
       const context = canvas.getContext('2d');
       if (context) {
-        context.scale(2, 2);
+        context.scale(2, 2); // Scale to match the increased resolution
         context.lineCap = 'round';
         context.lineJoin = 'round';
         context.strokeStyle = 'black';
         context.lineWidth = 3;
-        // Set white background for better contrast
-        context.fillStyle = 'white';
-        context.fillRect(0, 0, canvas.width, canvas.height);
         contextRef.current = context;
       }
     }
     
+    // Handle window resize
     const handleResize = () => {
       const canvas = canvasRef.current;
       if (canvas && contextRef.current) {
+        // Save current drawing
         const currentDrawing = canvas.toDataURL();
         const img = new Image();
         
         img.onload = () => {
+          // Resize canvas
           const rect = canvas.getBoundingClientRect();
           const prevWidth = canvas.width / 2;
           const prevHeight = canvas.height / 2;
           canvas.width = rect.width * 2;
           canvas.height = rect.height * 2;
           
+          // Restore context properties
           const context = contextRef.current;
           if (context) {
             context.scale(2, 2);
@@ -56,6 +58,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
             context.strokeStyle = 'black';
             context.lineWidth = 3;
             
+            // Draw previous content scaled to new size
             if (hasDrawing) {
               const scaleFactor = Math.min(
                 rect.width / prevWidth,
@@ -82,6 +85,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, [hasDrawing]);
   
+  // Start drawing
   const startDrawing = (event: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     const context = contextRef.current;
     const canvas = canvasRef.current;
@@ -93,10 +97,12 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
       let x, y;
       
       if ('touches' in event) {
+        // Touch event
         const touch = event.touches[0];
         x = touch.clientX - rect.left;
         y = touch.clientY - rect.top;
       } else {
+        // Mouse event
         x = event.clientX - rect.left;
         y = event.clientY - rect.top;
       }
@@ -107,6 +113,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
     }
   };
   
+  // Draw
   const draw = (event: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     if (!isDrawing) return;
     
@@ -118,10 +125,12 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
       let x, y;
       
       if ('touches' in event) {
+        // Touch event
         const touch = event.touches[0];
         x = touch.clientX - rect.left;
         y = touch.clientY - rect.top;
       } else {
+        // Mouse event
         x = event.clientX - rect.left;
         y = event.clientY - rect.top;
       }
@@ -131,6 +140,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
     }
   };
   
+  // Stop drawing
   const stopDrawing = () => {
     if (isDrawing && contextRef.current) {
       contextRef.current.closePath();
@@ -138,22 +148,22 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
     }
   };
   
+  // Clear canvas
   const clearCanvas = () => {
     const context = contextRef.current;
     const canvas = canvasRef.current;
     
     if (context && canvas) {
-      // Clear canvas and refill with white
-      context.fillStyle = 'white';
-      context.fillRect(0, 0, canvas.width / 2, canvas.height / 2);
+      context.clearRect(0, 0, canvas.width / 2, canvas.height / 2);
       setHasDrawing(false);
     }
   };
   
+  // Complete drawing
   const completeDrawing = () => {
     const canvas = canvasRef.current;
     if (canvas && hasDrawing) {
-      const imageData = canvas.toDataURL('image/png', 1.0);
+      const imageData = canvas.toDataURL('image/png');
       onDrawingComplete(imageData);
     }
   };

@@ -1,14 +1,8 @@
+
 import React, { useRef, useState, useEffect } from 'react';
-import { RefreshCw, Check, Hand, Camera } from 'lucide-react';
+import { RefreshCw, Check, Hand } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { detectHandGesture } from '@/utils/handGestureDetector';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 interface AirDrawingCanvasProps {
   onDrawingComplete: (imageData: string) => void;
@@ -23,59 +17,44 @@ const AirDrawingCanvas: React.FC<AirDrawingCanvasProps> = ({ onDrawingComplete }
   const [currentGesture, setCurrentGesture] = useState<string>("None");
   const [cameraError, setCameraError] = useState<string | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const [availableCameras, setAvailableCameras] = useState<MediaDeviceInfo[]>([]);
-  const [selectedCamera, setSelectedCamera] = useState<string>("");
-
-  useEffect(() => {
-    const getCameras = async () => {
-      try {
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const videoDevices = devices.filter(device => device.kind === 'videoinput');
-        setAvailableCameras(videoDevices);
-        
-        if (videoDevices.length > 0) {
-          setSelectedCamera(videoDevices[0].deviceId);
-        }
-      } catch (error) {
-        console.error('Error enumerating devices:', error);
-        setCameraError('Unable to list available cameras.');
-      }
-    };
-    
-    getCameras();
-  }, []);
-
+  
+  // Initialize canvas
   useEffect(() => {
     const canvas = canvasRef.current;
     if (canvas) {
+      // Set canvas dimensions with higher resolution for better quality
       const rect = canvas.getBoundingClientRect();
       canvas.width = rect.width * 2;
       canvas.height = rect.height * 2;
       
       const context = canvas.getContext('2d');
       if (context) {
-        context.scale(2, 2);
+        context.scale(2, 2); // Scale to match the increased resolution
         context.lineCap = 'round';
         context.lineJoin = 'round';
-        context.strokeStyle = '#8B5CF6';
+        context.strokeStyle = '#8B5CF6'; // Vibrant purple color
         context.lineWidth = 5;
         contextRef.current = context;
       }
     }
     
+    // Handle resize
     const handleResize = () => {
       const canvas = canvasRef.current;
       if (canvas && contextRef.current) {
+        // Save current drawing
         const currentDrawing = canvas.toDataURL();
         const img = new Image();
         
         img.onload = () => {
+          // Resize canvas
           const rect = canvas.getBoundingClientRect();
           const prevWidth = canvas.width / 2;
           const prevHeight = canvas.height / 2;
           canvas.width = rect.width * 2;
           canvas.height = rect.height * 2;
           
+          // Restore context properties
           const context = contextRef.current;
           if (context) {
             context.scale(2, 2);
@@ -84,6 +63,7 @@ const AirDrawingCanvas: React.FC<AirDrawingCanvasProps> = ({ onDrawingComplete }
             context.strokeStyle = '#8B5CF6';
             context.lineWidth = 5;
             
+            // Draw previous content scaled to new size
             if (hasDrawing) {
               const scaleFactor = Math.min(
                 rect.width / prevWidth,
@@ -109,23 +89,14 @@ const AirDrawingCanvas: React.FC<AirDrawingCanvasProps> = ({ onDrawingComplete }
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, [hasDrawing]);
-
+  
+  // Start camera
   const startCamera = async () => {
     try {
       setCameraError(null);
-      
-      if (!selectedCamera) {
-        setCameraError('No camera selected. Please select a camera.');
-        return;
-      }
-      
-      const constraints = {
-        video: { 
-          deviceId: selectedCamera ? { exact: selectedCamera } : undefined,
-        }
-      };
-      
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: 'user' } // Use front camera for hand detection
+      });
       
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -134,24 +105,11 @@ const AirDrawingCanvas: React.FC<AirDrawingCanvasProps> = ({ onDrawingComplete }
       }
     } catch (error) {
       console.error('Error accessing camera:', error);
-      setCameraError('Unable to access the selected camera. Please try another camera or check permissions.');
+      setCameraError('Unable to access camera. Please make sure you have granted camera permissions.');
     }
   };
-
-  const handleCameraChange = (deviceId: string) => {
-    setSelectedCamera(deviceId);
-    
-    if (isCameraActive) {
-      stopCamera();
-      setTimeout(() => {
-        if (deviceId) {
-          setSelectedCamera(deviceId);
-          startCamera();
-        }
-      }, 500);
-    }
-  };
-
+  
+  // Stop camera
   const stopCamera = () => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
@@ -159,7 +117,8 @@ const AirDrawingCanvas: React.FC<AirDrawingCanvasProps> = ({ onDrawingComplete }
       setIsCameraActive(false);
     }
   };
-
+  
+  // Process hand gestures
   useEffect(() => {
     if (!isCameraActive) return;
     
@@ -171,6 +130,7 @@ const AirDrawingCanvas: React.FC<AirDrawingCanvasProps> = ({ onDrawingComplete }
       
       const gesture = detectHandGesture(videoRef.current);
       
+      // Update gesture display
       if (gesture.isDrawing) {
         setCurrentGesture("Drawing (Index finger)");
       } else if (gesture.isPausing) {
@@ -181,11 +141,13 @@ const AirDrawingCanvas: React.FC<AirDrawingCanvasProps> = ({ onDrawingComplete }
         setCurrentGesture("No gesture detected");
       }
       
+      // Handle drawing position
       if (gesture.isDrawing && gesture.drawingPosition) {
         const canvas = canvasRef.current;
         const context = contextRef.current;
         
         if (canvas && context) {
+          // Scale drawing position to canvas size
           const canvasRect = canvas.getBoundingClientRect();
           const videoWidth = videoRef.current?.videoWidth || 640;
           const videoHeight = videoRef.current?.videoHeight || 480;
@@ -194,10 +156,12 @@ const AirDrawingCanvas: React.FC<AirDrawingCanvasProps> = ({ onDrawingComplete }
           const scaledY = (gesture.drawingPosition.y / videoHeight) * canvasRect.height;
           
           if (!isCurrentlyDrawing) {
+            // Start a new line
             context.beginPath();
             context.moveTo(scaledX, scaledY);
             isCurrentlyDrawing = true;
           } else if (lastPosition) {
+            // Continue line
             context.lineTo(scaledX, scaledY);
             context.stroke();
           }
@@ -206,25 +170,30 @@ const AirDrawingCanvas: React.FC<AirDrawingCanvasProps> = ({ onDrawingComplete }
           setHasDrawing(true);
         }
       } else {
+        // Not drawing
         isCurrentlyDrawing = false;
         lastPosition = null;
         
+        // If solving gesture detected, complete the drawing
         if (gesture.isSolving) {
           completeDrawing();
         }
       }
       
+      // Continue processing frames
       requestAnimationFrame(processFrame);
     };
     
     const frameId = requestAnimationFrame(processFrame);
     return () => cancelAnimationFrame(frameId);
   }, [isCameraActive]);
-
+  
+  // Cleanup on unmount
   useEffect(() => {
     return () => stopCamera();
   }, []);
-
+  
+  // Clear canvas
   const clearCanvas = () => {
     const context = contextRef.current;
     const canvas = canvasRef.current;
@@ -234,7 +203,8 @@ const AirDrawingCanvas: React.FC<AirDrawingCanvasProps> = ({ onDrawingComplete }
       setHasDrawing(false);
     }
   };
-
+  
+  // Complete drawing
   const completeDrawing = () => {
     const canvas = canvasRef.current;
     if (canvas && hasDrawing) {
@@ -242,29 +212,31 @@ const AirDrawingCanvas: React.FC<AirDrawingCanvasProps> = ({ onDrawingComplete }
       onDrawingComplete(imageData);
     }
   };
-
+  
   return (
     <div className="w-full">
       <div className="glass-card rounded-xl overflow-hidden relative">
+        {/* Drawing canvas */}
         <div className="aspect-[4/3] bg-white relative">
+          <canvas
+            ref={canvasRef}
+            className="w-full h-full drawing-canvas absolute top-0 left-0 z-10"
+          />
+          
+          {/* Camera feed */}
           {isCameraActive && (
-            <div className="absolute top-0 left-0 w-full h-full z-0">
+            <div className="absolute top-0 left-0 w-full h-full bg-black z-0">
               <video 
                 ref={videoRef} 
                 autoPlay 
                 playsInline 
                 muted
-                className="w-full h-full object-contain"
+                className="w-full h-full object-cover opacity-75"
               />
             </div>
           )}
           
-          <canvas
-            ref={canvasRef}
-            className="w-full h-full drawing-canvas absolute top-0 left-0 z-10"
-            style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
-          />
-          
+          {/* Gesture indicator */}
           {isCameraActive && (
             <div className="absolute top-4 left-0 right-0 p-4 text-center z-20">
               <div className="inline-block px-3 py-1 bg-purple-100 rounded-full text-purple-600 text-sm">
@@ -273,6 +245,7 @@ const AirDrawingCanvas: React.FC<AirDrawingCanvasProps> = ({ onDrawingComplete }
             </div>
           )}
           
+          {/* Startup view */}
           {!isCameraActive && !hasDrawing && (
             <div className="absolute top-0 left-0 right-0 p-4 text-center z-20">
               <div className="inline-block px-3 py-1 bg-blue-50 rounded-full text-blue-600 text-sm">
@@ -283,43 +256,13 @@ const AirDrawingCanvas: React.FC<AirDrawingCanvasProps> = ({ onDrawingComplete }
         </div>
       </div>
       
-      <div className="mt-6 space-y-4">
-        {!isCameraActive && (
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <div className="w-full sm:w-auto">
-              <Select value={selectedCamera} onValueChange={handleCameraChange}>
-                <SelectTrigger className="w-full sm:w-[220px]">
-                  <SelectValue placeholder="Select camera" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableCameras.length === 0 ? (
-                    <SelectItem value="no-cameras">No cameras found</SelectItem>
-                  ) : (
-                    availableCameras.map((camera) => (
-                      <SelectItem key={camera.deviceId} value={camera.deviceId}>
-                        {camera.label || `Camera ${availableCameras.indexOf(camera) + 1}`}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <Button onClick={startCamera} disabled={!selectedCamera}>
-              <Camera className="w-4 h-4 mr-2" />
-              Start Air Drawing
-            </Button>
-          </div>
-        )}
-        
-        {cameraError && (
-          <div className="text-red-500 text-center p-2 bg-red-50 rounded-md">
-            {cameraError}
-          </div>
-        )}
-        
-        {isCameraActive && (
-          <div className="flex justify-center space-x-4">
+      <div className="mt-6 flex justify-center space-x-4">
+        {!isCameraActive && !hasDrawing ? (
+          <Button onClick={startCamera}>
+            Start Air Drawing
+          </Button>
+        ) : (
+          <>
             <Button variant="outline" onClick={clearCanvas} disabled={!hasDrawing}>
               <RefreshCw className="w-4 h-4 mr-2" />
               Clear
@@ -328,10 +271,12 @@ const AirDrawingCanvas: React.FC<AirDrawingCanvasProps> = ({ onDrawingComplete }
               <Check className="w-4 h-4 mr-2" />
               Solve
             </Button>
-            <Button variant="destructive" onClick={stopCamera}>
-              Stop Camera
-            </Button>
-          </div>
+            {isCameraActive && (
+              <Button variant="destructive" onClick={stopCamera}>
+                Stop Camera
+              </Button>
+            )}
+          </>
         )}
       </div>
     </div>

@@ -3,11 +3,10 @@ import React, { useState } from 'react';
 import Layout from '@/components/layout/Layout';
 import DrawingCanvas from '@/components/draw/DrawingCanvas';
 import AirDrawingCanvas from '@/components/draw/AirDrawingCanvas';
-import MathScriptCanvas from '@/components/draw/MathScriptCanvas';
 import SolutionDisplay from '@/components/shared/SolutionDisplay';
 import { processEquationImage, solveEquation, SolveResult } from '@/utils/mathSolver';
 import { Button } from '@/components/ui/button';
-import { History, Pencil, Hand, Square } from 'lucide-react';
+import { History, Pencil, Hand } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const DrawPage = () => {
@@ -16,7 +15,7 @@ const DrawPage = () => {
   const [solution, setSolution] = useState<SolveResult | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSolving, setIsSolving] = useState(false);
-  const [drawingMode, setDrawingMode] = useState<'manual' | 'air' | 'myscript'>('manual');
+  const [drawingMode, setDrawingMode] = useState<'manual' | 'air'>('manual');
   const { toast } = useToast();
   
   // Handle drawing completion
@@ -25,27 +24,20 @@ const DrawPage = () => {
     setIsProcessing(true);
     
     try {
-      // Use Tesseract OCR for manual and air drawing
-      if (drawingMode !== 'myscript') {
-        const equation = await processEquationImage(imageData);
-        setExtractedEquation(equation);
-      }
-      
-      // For MyScript, the imageData is already the LaTeX
-      else {
-        setExtractedEquation(imageData);
-      }
+      // Process image to extract equation
+      const equation = await processEquationImage(imageData);
+      setExtractedEquation(equation);
       
       // Solve the extracted equation
       setIsSolving(true);
       setIsProcessing(false);
       
-      const result = await solveEquation(drawingMode === 'myscript' ? imageData : (extractedEquation || ''));
+      const result = await solveEquation(equation);
       setSolution(result);
     } catch (error) {
       toast({
         title: "Error processing drawing",
-        description: "Failed to extract equation from drawing. Please try again with clearer writing.",
+        description: "Failed to extract equation from drawing. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -74,12 +66,12 @@ const DrawPage = () => {
           
           {/* Drawing mode toggle */}
           <div className="flex justify-center mt-6">
-            <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-1 inline-flex flex-wrap justify-center">
+            <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-1 inline-flex">
               <Button 
                 variant={drawingMode === 'manual' ? "default" : "ghost"} 
                 size="sm"
                 onClick={() => setDrawingMode('manual')}
-                className="flex items-center m-1"
+                className="flex items-center"
               >
                 <Pencil className="w-4 h-4 mr-2" />
                 Manual Draw
@@ -88,19 +80,10 @@ const DrawPage = () => {
                 variant={drawingMode === 'air' ? "default" : "ghost"} 
                 size="sm"
                 onClick={() => setDrawingMode('air')}
-                className="flex items-center m-1"
+                className="flex items-center"
               >
                 <Hand className="w-4 h-4 mr-2" />
                 Air Draw
-              </Button>
-              <Button 
-                variant={drawingMode === 'myscript' ? "default" : "ghost"} 
-                size="sm"
-                onClick={() => setDrawingMode('myscript')}
-                className="flex items-center m-1"
-              >
-                <Square className="w-4 h-4 mr-2" />
-                Math Recognition
               </Button>
             </div>
           </div>
@@ -125,37 +108,22 @@ const DrawPage = () => {
               </div>
             </div>
           )}
-          
-          {/* MyScript info */}
-          {drawingMode === 'myscript' && !solution && (
-            <div className="mt-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 max-w-xl mx-auto">
-              <h3 className="font-semibold text-blue-800 dark:text-blue-300 mb-2">MyScript Math Recognition</h3>
-              <p className="text-gray-700 dark:text-gray-300">
-                Draw your math equation and it will be instantly converted to LaTeX format.
-                Supports complex mathematical notations, fractions, and more.
-              </p>
-            </div>
-          )}
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div>
             {!solution ? (
               <>
-                {drawingMode === 'manual' && (
+                {drawingMode === 'manual' ? (
                   <DrawingCanvas onDrawingComplete={handleDrawingComplete} />
-                )}
-                {drawingMode === 'air' && (
+                ) : (
                   <AirDrawingCanvas onDrawingComplete={handleDrawingComplete} />
-                )}
-                {drawingMode === 'myscript' && (
-                  <MathScriptCanvas onDrawingComplete={handleDrawingComplete} />
                 )}
               </>
             ) : (
               <div className="glass-card rounded-xl overflow-hidden">
                 <div className="aspect-[4/3] bg-white relative">
-                  {drawnImage && drawingMode !== 'myscript' && (
+                  {drawnImage && (
                     <img 
                       src={drawnImage} 
                       alt="Drawn equation" 
@@ -166,8 +134,7 @@ const DrawPage = () => {
                   {extractedEquation && (
                     <div className="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-sm p-4">
                       <p className="text-white font-mono">
-                        {drawingMode === 'myscript' ? 'LaTeX' : 'Detected'}: 
-                        <span className="text-primary ml-2">{extractedEquation}</span>
+                        Detected: <span className="text-primary">{extractedEquation}</span>
                       </p>
                     </div>
                   )}

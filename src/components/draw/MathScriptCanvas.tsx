@@ -36,6 +36,8 @@ const MathScriptCanvas: React.FC<MathScriptCanvasProps> = ({ onDrawingComplete }
 
   // Initialize editor after MyScript is loaded
   useEffect(() => {
+    let editor: any = null;
+    
     if (isEditorLoaded && editorRef.current && !editorInstance.current && MyScriptJS) {
       // You need to register and get API keys from MyScript
       // For demo purposes, we'll use placeholder values
@@ -60,39 +62,50 @@ const MathScriptCanvas: React.FC<MathScriptCanvasProps> = ({ onDrawingComplete }
       };
 
       try {
-        editorInstance.current = MyScriptJS.register(editorRef.current, applicationConfig);
+        editor = MyScriptJS.register(editorRef.current, applicationConfig);
+        editorInstance.current = editor;
         
         // Configure editor
-        const editor = editorInstance.current;
-        editor.addEventListener('exported', (event: any) => {
-          const exports = event.detail.exports;
-          if (exports && exports['application/x-latex']) {
-            const latex = exports['application/x-latex'];
-            setLatexResult(latex);
+        if (editor) {
+          // Handle exported event (when conversion to LaTeX happens)
+          editor.addListener('exported', (event: any) => {
+            const exports = event.detail.exports;
+            if (exports && exports['application/x-latex']) {
+              const latex = exports['application/x-latex'];
+              setLatexResult(latex);
+              setHasDrawing(true);
+            }
+          });
+
+          // Handle changed event (when user is drawing)
+          editor.addListener('changed', () => {
             setHasDrawing(true);
-          }
-        });
+          });
 
-        editor.addEventListener('changed', () => {
-          setHasDrawing(true);
-        });
-
-        // Set editor configuration
-        editor.configuration = editorConfig;
+          // Set editor configuration
+          editor.configuration = editorConfig;
+        }
       } catch (error) {
         console.error('Failed to initialize MyScript editor:', error);
       }
     }
 
     return () => {
-      if (editorInstance.current) {
-        editorInstance.current.close();
+      // Proper cleanup - check if the editor exists and if it has a destroy method
+      if (editor && editor.destroy && typeof editor.destroy === 'function') {
+        try {
+          editor.destroy();
+        } catch (error) {
+          console.error('Error destroying editor:', error);
+        }
       }
+      // Clear the reference
+      editorInstance.current = null;
     };
   }, [isEditorLoaded]);
 
   const clearCanvas = () => {
-    if (editorInstance.current) {
+    if (editorInstance.current && editorInstance.current.clear) {
       editorInstance.current.clear();
       setHasDrawing(false);
       setLatexResult('');

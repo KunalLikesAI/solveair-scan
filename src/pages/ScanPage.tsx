@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import Layout from '@/components/layout/Layout';
 import CameraView from '@/components/scan/CameraView';
@@ -60,41 +61,20 @@ const ScanPage = () => {
   
   return (
     <Layout>
-      <div className="max-w-4xl mx-auto px-6 py-12">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-            Scan & Solve
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            Take a photo of any math equation and get an instant solution with step-by-step explanations.
-          </p>
-          
-          {!solution && !capturedImage && (
-            <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 max-w-xl mx-auto">
-              <h3 className="font-semibold text-blue-800 dark:text-blue-300 mb-2">Scanning Tips</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-                <div className="p-2 bg-white dark:bg-gray-800 rounded-lg">
-                  <p className="font-semibold text-gray-900 dark:text-gray-100">Good Lighting</p>
-                  <p className="text-gray-600 dark:text-gray-400">Ensure equation is well-lit</p>
-                </div>
-                <div className="p-2 bg-white dark:bg-gray-800 rounded-lg">
-                  <p className="font-semibold text-gray-900 dark:text-gray-100">Steady Camera</p>
-                  <p className="text-gray-600 dark:text-gray-400">Hold still for best results</p>
-                </div>
-                <div className="p-2 bg-white dark:bg-gray-800 rounded-lg">
-                  <p className="font-semibold text-gray-900 dark:text-gray-100">Clear Writing</p>
-                  <p className="text-gray-600 dark:text-gray-400">Avoid messy handwriting</p>
-                </div>
-              </div>
+      <div className="w-full h-[calc(100vh-64px)]">
+        {!solution ? (
+          <div className="w-full h-full">
+            <CameraView onCapture={handleImageCapture} />
+          </div>
+        ) : (
+          <div className="max-w-4xl mx-auto px-6 py-12">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+                Solution
+              </h1>
             </div>
-          )}
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div>
-            {!solution ? (
-              <CameraView onCapture={handleImageCapture} />
-            ) : (
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="glass-card rounded-xl overflow-hidden">
                 <div className="aspect-[4/3] bg-gray-900 relative">
                   {capturedImage && (
@@ -123,11 +103,21 @@ const ScanPage = () => {
                   </Button>
                 </div>
               </div>
-            )}
+              
+              <div>
+                <SolutionDisplay 
+                  equation={solution.equation}
+                  solution={solution.solution}
+                  steps={solution.steps}
+                />
+              </div>
+            </div>
           </div>
-          
-          <div>
-            {(isProcessing || isSolving) && (
+        )}
+        
+        {(isProcessing || isSolving) && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-lg p-6 shadow-xl">
               <SolutionDisplay 
                 equation={isProcessing ? "Extracting equation..." : (extractedEquation || "")}
                 solution=""
@@ -136,33 +126,9 @@ const ScanPage = () => {
                 progress={processingProgress}
                 processingPhase={isProcessing ? "recognizing" : "solving"}
               />
-            )}
-            
-            {solution && !isProcessing && !isSolving && (
-              <SolutionDisplay 
-                equation={solution.equation}
-                solution={solution.solution}
-                steps={solution.steps}
-              />
-            )}
-            
-            {!solution && !isProcessing && !isSolving && (
-              <div className="glass-card rounded-xl overflow-hidden h-full">
-                <div className="p-8 flex flex-col items-center justify-center h-full">
-                  <div className="feature-icon mb-6">
-                    <Scan className="w-6 h-6" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                    Solution Will Appear Here
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-400 text-center">
-                    Take a photo of a math equation using the camera to see its solution and step-by-step explanation.
-                  </p>
-                </div>
-              </div>
-            )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </Layout>
   );

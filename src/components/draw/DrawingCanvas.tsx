@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect } from 'react';
 import { RefreshCw, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,18 +12,16 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
   const [hasDrawing, setHasDrawing] = useState(false);
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
   
-  // Initialize canvas
   useEffect(() => {
     const canvas = canvasRef.current;
     if (canvas) {
-      // Set canvas dimensions with higher resolution for better quality
       const rect = canvas.getBoundingClientRect();
       canvas.width = rect.width * 2;
       canvas.height = rect.height * 2;
       
       const context = canvas.getContext('2d');
       if (context) {
-        context.scale(2, 2); // Scale to match the increased resolution
+        context.scale(2, 2);
         context.lineCap = 'round';
         context.lineJoin = 'round';
         context.strokeStyle = 'black';
@@ -33,23 +30,19 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
       }
     }
     
-    // Handle window resize
     const handleResize = () => {
       const canvas = canvasRef.current;
       if (canvas && contextRef.current) {
-        // Save current drawing
         const currentDrawing = canvas.toDataURL();
         const img = new Image();
         
         img.onload = () => {
-          // Resize canvas
           const rect = canvas.getBoundingClientRect();
           const prevWidth = canvas.width / 2;
           const prevHeight = canvas.height / 2;
           canvas.width = rect.width * 2;
           canvas.height = rect.height * 2;
           
-          // Restore context properties
           const context = contextRef.current;
           if (context) {
             context.scale(2, 2);
@@ -58,7 +51,6 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
             context.strokeStyle = 'black';
             context.lineWidth = 3;
             
-            // Draw previous content scaled to new size
             if (hasDrawing) {
               const scaleFactor = Math.min(
                 rect.width / prevWidth,
@@ -85,7 +77,6 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, [hasDrawing]);
   
-  // Start drawing
   const startDrawing = (event: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     const context = contextRef.current;
     const canvas = canvasRef.current;
@@ -97,12 +88,10 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
       let x, y;
       
       if ('touches' in event) {
-        // Touch event
         const touch = event.touches[0];
         x = touch.clientX - rect.left;
         y = touch.clientY - rect.top;
       } else {
-        // Mouse event
         x = event.clientX - rect.left;
         y = event.clientY - rect.top;
       }
@@ -113,7 +102,6 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
     }
   };
   
-  // Draw
   const draw = (event: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     if (!isDrawing) return;
     
@@ -125,12 +113,10 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
       let x, y;
       
       if ('touches' in event) {
-        // Touch event
         const touch = event.touches[0];
         x = touch.clientX - rect.left;
         y = touch.clientY - rect.top;
       } else {
-        // Mouse event
         x = event.clientX - rect.left;
         y = event.clientY - rect.top;
       }
@@ -140,7 +126,6 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
     }
   };
   
-  // Stop drawing
   const stopDrawing = () => {
     if (isDrawing && contextRef.current) {
       contextRef.current.closePath();
@@ -148,7 +133,6 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
     }
   };
   
-  // Clear canvas
   const clearCanvas = () => {
     const context = contextRef.current;
     const canvas = canvasRef.current;
@@ -159,11 +143,10 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
     }
   };
   
-  // Complete drawing
   const completeDrawing = () => {
     const canvas = canvasRef.current;
     if (canvas && hasDrawing) {
-      const imageData = canvas.toDataURL('image/png');
+      const imageData = canvas.toDataURL('image/png', 1.0);
       onDrawingComplete(imageData);
     }
   };

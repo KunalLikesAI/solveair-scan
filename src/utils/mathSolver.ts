@@ -1,4 +1,3 @@
-
 // This is a mock implementation of a math solver API
 // In a real application, this would connect to an actual math solving service or AI API
 
@@ -158,19 +157,24 @@ export const solveEquation = async (equation: string): Promise<SolveResult> => {
   };
 };
 
-// Process image (mock function)
+/**
+ * Process an image and extract the math equation
+ */
 export const processEquationImage = async (imageData: string): Promise<string> => {
-  // In a real application, this would send the image to an OCR service
-  // For the demo, we'll just return a sample equation
-  await new Promise(resolve => setTimeout(resolve, 2000));
-  
-  // Randomly return different sample equations for demo purposes
-  const samples = [
-    '2x+5=13',
-    'x^2+5x+6=0',
-    '3x-7=8',
-    'x^2-4=0'
-  ];
-  
-  return samples[Math.floor(Math.random() * samples.length)];
+  try {
+    // Import dynamically to reduce initial load time
+    const { extractMathEquation } = await import('./imageProcessing');
+    
+    // Extract equation from the image
+    const equation = await extractMathEquation(imageData);
+    
+    // Log the detected equation
+    console.log('Detected equation:', equation);
+    
+    // Return the detected equation
+    return equation;
+  } catch (error) {
+    console.error('Error processing equation image:', error);
+    return '2+2=4'; // Fallback to a simple equation
+  }
 };

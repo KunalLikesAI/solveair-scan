@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Camera, X, Image, RefreshCw, ScanLine, Focus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -18,7 +17,6 @@ const CameraView: React.FC<CameraViewProps> = ({ onCapture }) => {
   const streamRef = useRef<MediaStream | null>(null);
   const scanLineRef = useRef<HTMLDivElement>(null);
 
-  // Start camera
   const startCamera = async () => {
     try {
       setCameraError(null);
@@ -41,7 +39,6 @@ const CameraView: React.FC<CameraViewProps> = ({ onCapture }) => {
     }
   };
 
-  // Stop camera
   const stopCamera = () => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
@@ -50,13 +47,10 @@ const CameraView: React.FC<CameraViewProps> = ({ onCapture }) => {
     }
   };
 
-  // Capture image
   const captureImage = () => {
     if (videoRef.current && canvasRef.current) {
-      // Start scanning animation
       setIsScanning(true);
       
-      // Simulate ML Kit processing delay
       setTimeout(() => {
         const video = videoRef.current;
         const canvas = canvasRef.current;
@@ -68,10 +62,6 @@ const CameraView: React.FC<CameraViewProps> = ({ onCapture }) => {
         if (ctx) {
           ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
           
-          // Apply contrast enhancement and auto-crop simulation
-          // In a real app, this would use actual image processing algorithms
-          // For demo purposes, we're just adding this comment to indicate the capability
-          
           const imageData = canvas.toDataURL('image/jpeg');
           setCapturedImage(imageData);
           stopCamera();
@@ -81,19 +71,16 @@ const CameraView: React.FC<CameraViewProps> = ({ onCapture }) => {
     }
   };
 
-  // Toggle flash - Modified to handle browsers that don't support torch
   const toggleFlash = () => {
     if (streamRef.current) {
       const tracks = streamRef.current.getVideoTracks();
       if (tracks.length > 0) {
         try {
-          // Try to access advanced features if available
           const capabilities = tracks[0].getCapabilities();
           const hasFlash = 'torch' in capabilities;
           
           if (hasFlash) {
             const newFlashMode = !flashMode;
-            // Use advanced constraints with torch if supported
             tracks[0].applyConstraints({
               advanced: [{ torch: newFlashMode } as any]
             }).then(() => {
@@ -111,23 +98,19 @@ const CameraView: React.FC<CameraViewProps> = ({ onCapture }) => {
     }
   };
 
-  // Reset camera
   const resetCamera = () => {
     setCapturedImage(null);
     startCamera();
   };
 
-  // Confirm captured image
   const confirmImage = () => {
     if (capturedImage) {
       onCapture(capturedImage);
     }
   };
 
-  // Animate scan line
   useEffect(() => {
     if (isScanning && scanLineRef.current) {
-      // Simple animation for scan line
       let position = 0;
       const height = scanLineRef.current.parentElement?.clientHeight || 300;
       const interval = setInterval(() => {
@@ -144,7 +127,6 @@ const CameraView: React.FC<CameraViewProps> = ({ onCapture }) => {
     }
   }, [isScanning]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       stopCamera();
@@ -154,7 +136,6 @@ const CameraView: React.FC<CameraViewProps> = ({ onCapture }) => {
   return (
     <div className="w-full">
       <div className="glass-card rounded-xl overflow-hidden relative">
-        {/* Camera view */}
         {isCameraActive && !capturedImage && (
           <div className="aspect-[4/3] bg-gray-900 relative">
             <video 
@@ -164,13 +145,11 @@ const CameraView: React.FC<CameraViewProps> = ({ onCapture }) => {
               className="w-full h-full object-cover"
             />
             
-            {/* Scanning guide */}
             <div className="absolute inset-0 border-2 border-primary/30 border-dashed pointer-events-none" />
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="w-4/5 h-1/3 border-2 border-primary rounded-lg"></div>
             </div>
             
-            {/* Scanning animation */}
             {isScanning && (
               <div 
                 ref={scanLineRef}
@@ -181,7 +160,6 @@ const CameraView: React.FC<CameraViewProps> = ({ onCapture }) => {
               ></div>
             )}
             
-            {/* Camera controls */}
             <div className="absolute top-4 right-4 flex space-x-2">
               <Button 
                 variant="outline" 
@@ -203,7 +181,6 @@ const CameraView: React.FC<CameraViewProps> = ({ onCapture }) => {
           </div>
         )}
         
-        {/* Captured image view */}
         {capturedImage && (
           <div className="aspect-[4/3] bg-gray-900 relative">
             <img 
@@ -225,7 +202,6 @@ const CameraView: React.FC<CameraViewProps> = ({ onCapture }) => {
           </div>
         )}
         
-        {/* Camera start view */}
         {!isCameraActive && !capturedImage && (
           <div className="aspect-[4/3] bg-gray-100 dark:bg-gray-800 flex flex-col items-center justify-center p-8">
             {cameraError ? (
@@ -250,11 +226,9 @@ const CameraView: React.FC<CameraViewProps> = ({ onCapture }) => {
           </div>
         )}
         
-        {/* Hidden canvas for capturing */}
         <canvas ref={canvasRef} className="hidden" />
       </div>
       
-      {/* Camera controls */}
       {isCameraActive && !capturedImage && !isScanning && (
         <div className="mt-6 flex justify-center">
           <Button 
@@ -268,7 +242,6 @@ const CameraView: React.FC<CameraViewProps> = ({ onCapture }) => {
         </div>
       )}
       
-      {/* Scanning indicator */}
       {isScanning && (
         <div className="mt-6 flex justify-center">
           <div className="px-4 py-2 bg-black/20 backdrop-blur-sm rounded-full text-white flex items-center space-x-2">
@@ -278,7 +251,6 @@ const CameraView: React.FC<CameraViewProps> = ({ onCapture }) => {
         </div>
       )}
       
-      {/* Captured image controls */}
       {capturedImage && (
         <div className="mt-6 flex justify-center space-x-4">
           <Button variant="outline" onClick={resetCamera}>

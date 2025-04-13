@@ -24,7 +24,7 @@ const DrawPage = () => {
     setIsProcessing(true);
     
     try {
-      // Process image to extract equation
+      // Use Tesseract OCR to extract equation from drawing
       const equation = await processEquationImage(imageData);
       setExtractedEquation(equation);
       
@@ -37,7 +37,7 @@ const DrawPage = () => {
     } catch (error) {
       toast({
         title: "Error processing drawing",
-        description: "Failed to extract equation from drawing. Please try again.",
+        description: "Failed to extract equation from drawing. Please try again with clearer writing.",
         variant: "destructive",
       });
     } finally {

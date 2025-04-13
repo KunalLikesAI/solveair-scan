@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useEffect } from 'react';
 import { RefreshCw, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,6 +16,7 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (canvas) {
+      // Set higher resolution for better quality
       const rect = canvas.getBoundingClientRect();
       canvas.width = rect.width * 2;
       canvas.height = rect.height * 2;
@@ -26,6 +28,9 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
         context.lineJoin = 'round';
         context.strokeStyle = 'black';
         context.lineWidth = 3;
+        // Set white background for better contrast
+        context.fillStyle = 'white';
+        context.fillRect(0, 0, canvas.width, canvas.height);
         contextRef.current = context;
       }
     }
@@ -138,7 +143,9 @@ const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ onDrawingComplete }) => {
     const canvas = canvasRef.current;
     
     if (context && canvas) {
-      context.clearRect(0, 0, canvas.width / 2, canvas.height / 2);
+      // Clear canvas and refill with white
+      context.fillStyle = 'white';
+      context.fillRect(0, 0, canvas.width / 2, canvas.height / 2);
       setHasDrawing(false);
     }
   };

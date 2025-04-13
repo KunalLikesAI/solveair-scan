@@ -247,22 +247,23 @@ const AirDrawingCanvas: React.FC<AirDrawingCanvasProps> = ({ onDrawingComplete }
     <div className="w-full">
       <div className="glass-card rounded-xl overflow-hidden relative">
         <div className="aspect-[4/3] bg-white relative">
-          <canvas
-            ref={canvasRef}
-            className="w-full h-full drawing-canvas absolute top-0 left-0 z-10"
-          />
-          
           {isCameraActive && (
-            <div className="absolute top-0 left-0 w-full h-full bg-black z-0">
+            <div className="absolute top-0 left-0 w-full h-full z-0">
               <video 
                 ref={videoRef} 
                 autoPlay 
                 playsInline 
                 muted
-                className="w-full h-full object-cover opacity-75"
+                className="w-full h-full object-contain"
               />
             </div>
           )}
+          
+          <canvas
+            ref={canvasRef}
+            className="w-full h-full drawing-canvas absolute top-0 left-0 z-10"
+            style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
+          />
           
           {isCameraActive && (
             <div className="absolute top-4 left-0 right-0 p-4 text-center z-20">

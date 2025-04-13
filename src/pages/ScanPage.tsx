@@ -5,7 +5,7 @@ import CameraView from '@/components/scan/CameraView';
 import SolutionDisplay from '@/components/shared/SolutionDisplay';
 import { processEquationImage, solveEquation, SolveResult } from '@/utils/mathSolver';
 import { Button } from '@/components/ui/button';
-import { History, Scan, ScanText } from 'lucide-react';
+import { History, Scan } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const ScanPage = () => {
@@ -61,9 +61,9 @@ const ScanPage = () => {
   
   return (
     <Layout>
-      <div className="w-full h-[calc(100vh-64px)]">
+      <div className="w-full h-[calc(100vh-64px)] flex flex-col">
         {!solution ? (
-          <div className="w-full h-full">
+          <div className="w-full h-full flex-grow">
             <CameraView onCapture={handleImageCapture} />
           </div>
         ) : (
@@ -88,7 +88,7 @@ const ScanPage = () => {
                   {extractedEquation && (
                     <div className="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-sm p-4">
                       <div className="flex items-center space-x-2">
-                        <ScanText className="w-4 h-4 text-primary" />
+                        <Scan className="w-4 h-4 text-primary" />
                         <p className="text-white font-mono">
                           Detected: <span className="text-primary">{extractedEquation}</span>
                         </p>
@@ -106,9 +106,9 @@ const ScanPage = () => {
               
               <div>
                 <SolutionDisplay 
-                  equation={solution.equation}
-                  solution={solution.solution}
-                  steps={solution.steps}
+                  equation={solution?.equation}
+                  solution={solution?.solution}
+                  steps={solution?.steps}
                 />
               </div>
             </div>

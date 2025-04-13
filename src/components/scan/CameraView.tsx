@@ -135,10 +135,10 @@ const CameraView: React.FC<CameraViewProps> = ({ onCapture }) => {
   }, []);
 
   return (
-    <div className="w-full h-full">
+    <div className="w-full h-full flex flex-col justify-center">
       <div className="relative w-full h-full overflow-hidden">
-        {isCameraActive && !capturedImage && (
-          <div className="absolute inset-0 bg-black">
+        {isCameraActive && (
+          <div className="absolute inset-0 bg-black z-10">
             <video 
               ref={videoRef} 
               autoPlay 
@@ -183,11 +183,23 @@ const CameraView: React.FC<CameraViewProps> = ({ onCapture }) => {
                 </Button>
               </div>
             </div>
+            
+            {/* Camera controls */}
+            <div className="absolute bottom-6 left-0 right-0 flex justify-center z-10">
+              <Button 
+                size="lg" 
+                className="rounded-full w-16 h-16 p-0 flex items-center justify-center shadow-lg bg-white"
+                onClick={captureImage}
+                disabled={isScanning}
+              >
+                <div className="w-12 h-12 rounded-full border-2 border-cyan-400" />
+              </Button>
+            </div>
           </div>
         )}
         
         {capturedImage && (
-          <div className="absolute inset-0 bg-black">
+          <div className="absolute inset-0 bg-black z-10">
             <img 
               src={capturedImage} 
               alt="Captured equation" 
@@ -204,11 +216,22 @@ const CameraView: React.FC<CameraViewProps> = ({ onCapture }) => {
                 <X className="w-4 h-4" />
               </Button>
             </div>
+            
+            <div className="absolute bottom-6 left-0 right-0 flex justify-center space-x-4 z-10">
+              <Button variant="outline" onClick={resetCamera} className="bg-white/10 text-white border-white/20">
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Retake
+              </Button>
+              <Button onClick={confirmImage} className="bg-cyan-500 hover:bg-cyan-600">
+                <Focus className="w-4 h-4 mr-2" />
+                Process Equation
+              </Button>
+            </div>
           </div>
         )}
         
         {!isCameraActive && !capturedImage && (
-          <div className="aspect-[4/3] bg-gray-100 dark:bg-gray-800 flex flex-col items-center justify-center p-8">
+          <div className="w-full h-full bg-gray-100 dark:bg-gray-800 flex flex-col items-center justify-center p-8">
             {cameraError ? (
               <div className="text-center">
                 <div className="bg-red-50 dark:bg-red-900/20 text-red-500 p-4 rounded-lg mb-4">
@@ -231,43 +254,17 @@ const CameraView: React.FC<CameraViewProps> = ({ onCapture }) => {
           </div>
         )}
         
+        {isScanning && (
+          <div className="absolute bottom-6 left-0 right-0 flex justify-center z-20">
+            <div className="px-4 py-2 bg-black/20 backdrop-blur-sm rounded-full text-white flex items-center space-x-2">
+              <div className="w-3 h-3 bg-cyan-400 rounded-full animate-pulse"></div>
+              <span>Scanning equation...</span>
+            </div>
+          </div>
+        )}
+        
         <canvas ref={canvasRef} className="hidden" />
       </div>
-      
-      {isCameraActive && !capturedImage && !isScanning && (
-        <div className="absolute bottom-6 left-0 right-0 flex justify-center z-10">
-          <Button 
-            size="lg" 
-            className="rounded-full w-16 h-16 p-0 flex items-center justify-center shadow-lg bg-white"
-            onClick={captureImage}
-            disabled={isScanning}
-          >
-            <div className="w-12 h-12 rounded-full border-2 border-cyan-400" />
-          </Button>
-        </div>
-      )}
-      
-      {isScanning && (
-        <div className="absolute bottom-6 left-0 right-0 flex justify-center z-10">
-          <div className="px-4 py-2 bg-black/20 backdrop-blur-sm rounded-full text-white flex items-center space-x-2">
-            <div className="w-3 h-3 bg-cyan-400 rounded-full animate-pulse"></div>
-            <span>Scanning equation...</span>
-          </div>
-        </div>
-      )}
-      
-      {capturedImage && (
-        <div className="absolute bottom-6 left-0 right-0 flex justify-center space-x-4 z-10">
-          <Button variant="outline" onClick={resetCamera} className="bg-white/10 text-white border-white/20">
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Retake
-          </Button>
-          <Button onClick={confirmImage} className="bg-cyan-500 hover:bg-cyan-600">
-            <Focus className="w-4 h-4 mr-2" />
-            Process Equation
-          </Button>
-        </div>
-      )}
     </div>
   );
 };

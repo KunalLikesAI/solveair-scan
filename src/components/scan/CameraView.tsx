@@ -1,8 +1,11 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Camera, X, Image, RefreshCw, ScanLine, Focus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
+import WebCameraView from './components/WebCameraView';
+import MobileCameraView from './components/MobileCameraView';
+import CapturedImageView from './components/CapturedImageView';
+import CameraStartView from './components/CameraStartView';
+import CameraControls from './components/CameraControls';
 
 interface CameraViewProps {
   onCapture: (imageData: string) => void;
@@ -18,7 +21,6 @@ const CameraView: React.FC<CameraViewProps> = ({ onCapture }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const scanLineRef = useRef<HTMLDivElement>(null);
 
   // Check if running in Capacitor (mobile)
   useEffect(() => {
@@ -197,26 +199,6 @@ const CameraView: React.FC<CameraViewProps> = ({ onCapture }) => {
     }
   };
 
-  // Animate scan line
-  useEffect(() => {
-    if (isScanning && scanLineRef.current) {
-      // Simple animation for scan line
-      let position = 0;
-      const height = scanLineRef.current.parentElement?.clientHeight || 300;
-      const interval = setInterval(() => {
-        position += 5;
-        if (position > height) {
-          position = 0;
-        }
-        if (scanLineRef.current) {
-          scanLineRef.current.style.top = `${position}px`;
-        }
-      }, 50);
-      
-      return () => clearInterval(interval);
-    }
-  }, [isScanning]);
-
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -229,119 +211,31 @@ const CameraView: React.FC<CameraViewProps> = ({ onCapture }) => {
       <div className="glass-card rounded-xl overflow-hidden relative w-full h-full">
         {/* Camera view - Web only */}
         {isCameraActive && !capturedImage && !isMobileDevice && (
-          <div className="aspect-[4/3] bg-gray-900 relative w-full h-full">
-            <video 
-              ref={videoRef} 
-              autoPlay 
-              playsInline 
-              className="w-full h-full object-cover"
-              style={{ display: 'block' }}
-            />
-            
-            {/* Scanning guide */}
-            <div className="absolute inset-0 border-2 border-primary/30 border-dashed pointer-events-none" />
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="w-4/5 h-1/3 border-2 border-primary rounded-lg"></div>
-            </div>
-            
-            {/* Scanning animation */}
-            {isScanning && (
-              <div 
-                ref={scanLineRef}
-                className="absolute left-0 right-0 h-0.5 bg-primary pointer-events-none"
-                style={{
-                  boxShadow: '0 0 8px rgba(59, 130, 246, 0.8), 0 0 20px rgba(59, 130, 246, 0.6)'
-                }}
-              ></div>
-            )}
-            
-            {/* Camera controls - Web only */}
-            <div className="absolute top-4 right-4 flex space-x-2">
-              <Button 
-                variant="outline" 
-                size="icon"
-                className="rounded-full bg-black/20 backdrop-blur-sm border-white/10 text-white hover:bg-black/30"
-                onClick={toggleFlash}
-              >
-                <div className={`w-3 h-3 rounded-full ${flashMode ? 'bg-yellow-400' : 'bg-gray-400'}`}></div>
-              </Button>
-              <Button 
-                variant="outline" 
-                size="icon" 
-                className="rounded-full bg-black/20 backdrop-blur-sm border-white/10 text-white hover:bg-black/30"
-                onClick={() => stopCamera()}
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
+          <WebCameraView 
+            isScanning={isScanning}
+            flashMode={flashMode}
+            toggleFlash={toggleFlash}
+            stopCamera={stopCamera}
+            videoRef={videoRef}
+          />
         )}
         
         {/* Mobile camera placeholder - shows when camera would be active on mobile */}
-        {isCameraActive && !capturedImage && isMobileDevice && !isScanning && (
-          <div className="aspect-[4/3] bg-gray-900 flex items-center justify-center">
-            <div className="text-center text-white p-4">
-              <Camera className="w-12 h-12 mx-auto mb-2 text-primary" />
-              <p>Tap the button below to take a picture</p>
-            </div>
-          </div>
-        )}
-        
-        {/* Mobile scanning indicator */}
-        {isScanning && isMobileDevice && (
-          <div className="aspect-[4/3] bg-gray-900 flex items-center justify-center">
-            <div className="text-center text-white">
-              <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p>Processing image...</p>
-            </div>
-          </div>
+        {isCameraActive && !capturedImage && isMobileDevice && (
+          <MobileCameraView isScanning={isScanning} />
         )}
         
         {/* Captured image view */}
         {capturedImage && (
-          <div className="aspect-[4/3] bg-gray-900 relative">
-            <img 
-              src={capturedImage} 
-              alt="Captured equation" 
-              className="w-full h-full object-contain"
-            />
-            
-            <div className="absolute top-4 right-4">
-              <Button 
-                variant="outline" 
-                size="icon" 
-                className="rounded-full bg-black/20 backdrop-blur-sm border-white/10 text-white hover:bg-black/30"
-                onClick={() => setCapturedImage(null)}
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
+          <CapturedImageView 
+            imageUrl={capturedImage} 
+            onReset={() => setCapturedImage(null)} 
+          />
         )}
         
         {/* Camera start view */}
         {!isCameraActive && !capturedImage && (
-          <div className="aspect-[4/3] bg-gray-100 dark:bg-gray-800 flex flex-col items-center justify-center p-8">
-            {cameraError ? (
-              <div className="text-center">
-                <div className="bg-red-50 dark:bg-red-900/20 text-red-500 p-4 rounded-lg mb-4">
-                  {cameraError}
-                </div>
-                <Button onClick={() => startCamera()}>Try Again</Button>
-              </div>
-            ) : (
-              <div className="text-center">
-                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                  <Camera className="w-8 h-8 text-primary" />
-                </div>
-                <h3 className="text-xl font-medium text-gray-900 dark:text-gray-100 mb-2">Scan Math Equation</h3>
-                <p className="text-gray-500 dark:text-gray-400 mb-6">
-                  Position your camera to clearly capture the handwritten or printed math equation.
-                </p>
-                <Button onClick={() => startCamera()}>Start Camera</Button>
-              </div>
-            )}
-          </div>
+          <CameraStartView cameraError={cameraError} startCamera={startCamera} />
         )}
         
         {/* Hidden canvas for capturing */}
@@ -349,42 +243,14 @@ const CameraView: React.FC<CameraViewProps> = ({ onCapture }) => {
       </div>
       
       {/* Camera controls */}
-      {isCameraActive && !capturedImage && !isScanning && (
-        <div className="mt-6 flex justify-center">
-          <Button 
-            size="lg" 
-            className="rounded-full w-16 h-16 p-0 flex items-center justify-center shadow-lg"
-            onClick={captureImage}
-            disabled={isScanning}
-          >
-            <div className="w-12 h-12 rounded-full border-2 border-white" />
-          </Button>
-        </div>
-      )}
-      
-      {/* Scanning indicator */}
-      {isScanning && !isMobileDevice && (
-        <div className="mt-6 flex justify-center">
-          <div className="px-4 py-2 bg-black/20 backdrop-blur-sm rounded-full text-white flex items-center space-x-2">
-            <div className="w-3 h-3 bg-primary rounded-full animate-pulse"></div>
-            <span>Scanning equation...</span>
-          </div>
-        </div>
-      )}
-      
-      {/* Captured image controls */}
-      {capturedImage && (
-        <div className="mt-6 flex justify-center space-x-4">
-          <Button variant="outline" onClick={resetCamera}>
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Retake
-          </Button>
-          <Button onClick={confirmImage}>
-            <Focus className="w-4 h-4 mr-2" />
-            Process Equation
-          </Button>
-        </div>
-      )}
+      <CameraControls 
+        isCameraActive={isCameraActive}
+        capturedImage={capturedImage}
+        isScanning={isScanning}
+        captureImage={captureImage}
+        resetCamera={resetCamera}
+        confirmImage={confirmImage}
+      />
     </div>
   );
 };

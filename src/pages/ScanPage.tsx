@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Layout from '@/components/layout/Layout';
 import CameraView from '@/components/scan/CameraView';
@@ -26,21 +25,15 @@ const ScanPage = () => {
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const { toast } = useToast();
   
-  // Handle image capture from camera
   const handleImageCapture = async (imageData: string) => {
     setCapturedImage(imageData);
     setProcessedImage(imageData);
     setIsProcessing(true);
     setProcessingProgress(10);
-    setIsCameraOpen(false); // Close the camera view
+    setIsCameraOpen(false);
     
     try {
-      // Process image to extract equation
       setProcessingProgress(30);
-      
-      // In a real implementation, this would use OpenCV for preprocessing
-      // Here we just simulate the processed image being the same as original
-      // but in reality it would be auto-cropped, contrast adjusted, etc.
       setProcessedImage(imageData);
       setProcessingProgress(50);
       
@@ -48,7 +41,6 @@ const ScanPage = () => {
       setExtractedEquation(equation);
       setProcessingProgress(80);
       
-      // Solve the extracted equation
       setIsSolving(true);
       setIsProcessing(false);
       
@@ -67,7 +59,6 @@ const ScanPage = () => {
     }
   };
   
-  // Reset state to start over
   const handleReset = () => {
     setCapturedImage(null);
     setProcessedImage(null);
@@ -76,7 +67,6 @@ const ScanPage = () => {
     setProcessingProgress(0);
   };
 
-  // Open Camera in full screen dialog
   const openCamera = () => {
     setIsCameraOpen(true);
   };
@@ -92,7 +82,6 @@ const ScanPage = () => {
             Take a photo of any math equation and get an instant solution with step-by-step explanations.
           </p>
           
-          {/* Scanning tips */}
           {!solution && !capturedImage && (
             <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 max-w-xl mx-auto">
               <h3 className="font-semibold text-blue-800 dark:text-blue-300 mb-2">Scanning Tips</h3>
@@ -230,7 +219,6 @@ const ScanPage = () => {
         </div>
       </div>
       
-      {/* Full-screen camera dialog */}
       <Dialog open={isCameraOpen} onOpenChange={setIsCameraOpen}>
         <DialogContent className="max-w-full w-full h-[90vh] p-0 sm:p-0">
           <div className="w-full h-full flex flex-col">

@@ -1,4 +1,3 @@
-
 // This is a mock implementation of a math solver API
 // In a real application, this would connect to an actual math solving service or AI API
 
@@ -7,6 +6,39 @@ export interface SolveResult {
   solution: string;
   steps: string[];
 }
+
+// Image processing functions
+const applyContrastEnhancement = (imageData: string): string => {
+  // In a real implementation, this would use canvas to adjust contrast
+  // For demo purposes, we'll just return the original image
+  console.log('Applying contrast enhancement to image');
+  return imageData;
+};
+
+const applyThresholding = (imageData: string): string => {
+  // In a real implementation, this would convert the image to black and white 
+  // using a threshold algorithm
+  console.log('Applying thresholding to image');
+  return imageData;
+};
+
+const detectEquationRegion = (imageData: string): string => {
+  // In a real implementation, this would detect the region containing the equation
+  // and crop the image accordingly
+  console.log('Detecting equation region in image');
+  return imageData;
+};
+
+const preprocessImage = (imageData: string): string => {
+  // Apply a sequence of image processing techniques
+  let processedImage = imageData;
+  
+  processedImage = applyContrastEnhancement(processedImage);
+  processedImage = applyThresholding(processedImage);
+  processedImage = detectEquationRegion(processedImage);
+  
+  return processedImage;
+};
 
 // Mock function to simulate equation solving
 export const solveEquation = async (equation: string): Promise<SolveResult> => {
@@ -158,19 +190,50 @@ export const solveEquation = async (equation: string): Promise<SolveResult> => {
   };
 };
 
-// Process image (mock function)
+// Process image to extract equation
 export const processEquationImage = async (imageData: string): Promise<string> => {
-  // In a real application, this would send the image to an OCR service
-  // For the demo, we'll just return a sample equation
+  console.log('Processing equation image...');
+  
+  // Apply image preprocessing techniques
+  const processedImage = preprocessImage(imageData);
+  
+  // In a real application, this would send the processed image to an OCR service
+  // For the demo, we'll simulate OCR with a delay and sample equations
   await new Promise(resolve => setTimeout(resolve, 2000));
+  
+  // Real OCR integration would go here (e.g., Mathpix, Google Vision, etc.)
+  console.log('OCR processing complete');
   
   // Randomly return different sample equations for demo purposes
   const samples = [
     '2x+5=13',
     'x^2+5x+6=0',
     '3x-7=8',
-    'x^2-4=0'
+    'x^2-4=0',
+    'x^2-9=0',
+    '5x+2=3x-6',
+    'x^2+6x+9=0'
   ];
   
-  return samples[Math.floor(Math.random() * samples.length)];
+  const equation = samples[Math.floor(Math.random() * samples.length)];
+  console.log(`Extracted equation: ${equation}`);
+  
+  return equation;
+};
+
+// New function to simulate processing and returning both the processed image and extracted text
+export const analyzeEquationImage = async (imageData: string): Promise<{
+  processedImage: string;
+  extractedEquation: string;
+}> => {
+  // Apply preprocessing to the image (contrast enhancement, thresholding, etc.)
+  const processedImage = preprocessImage(imageData);
+  
+  // Extract equation text from the processed image (simulated)
+  const extractedEquation = await processEquationImage(imageData);
+  
+  return {
+    processedImage,
+    extractedEquation
+  };
 };

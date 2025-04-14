@@ -1,10 +1,11 @@
+
 import React, { useState } from 'react';
 import Layout from '@/components/layout/Layout';
 import CameraView from '@/components/scan/CameraView';
 import SolutionDisplay from '@/components/shared/SolutionDisplay';
-import { processEquationImage, solveEquation, SolveResult } from '@/utils/mathSolver';
+import { analyzeEquationImage, solveEquation, SolveResult } from '@/utils/mathSolver';
 import { Button } from '@/components/ui/button';
-import { History, Scan, ScanText } from 'lucide-react';
+import { History, Scan, ScanText, ImageIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { 
   Dialog,
@@ -23,29 +24,36 @@ const ScanPage = () => {
   const [isSolving, setIsSolving] = useState(false);
   const [processingProgress, setProcessingProgress] = useState<number>(0);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [showOriginal, setShowOriginal] = useState(false);
   const { toast } = useToast();
   
   const handleImageCapture = async (imageData: string) => {
     setCapturedImage(imageData);
-    setProcessedImage(imageData);
+    setProcessedImage(null);
     setIsProcessing(true);
     setProcessingProgress(10);
     setIsCameraOpen(false);
     
     try {
       setProcessingProgress(30);
-      setProcessedImage(imageData);
-      setProcessingProgress(50);
       
-      const equation = await processEquationImage(imageData);
-      setExtractedEquation(equation);
+      // Analyze the image to extract the equation
+      const analysisResult = await analyzeEquationImage(imageData);
+      setProcessedImage(analysisResult.processedImage);
+      setExtractedEquation(analysisResult.extractedEquation);
       setProcessingProgress(80);
       
       setIsSolving(true);
       setIsProcessing(false);
       
-      const result = await solveEquation(equation);
+      // Solve the extracted equation
+      const result = await solveEquation(analysisResult.extractedEquation);
       setSolution(result);
+      
+      toast({
+        title: "Equation processed successfully",
+        description: `Extracted: ${analysisResult.extractedEquation}`,
+      });
     } catch (error) {
       toast({
         title: "Error processing image",
@@ -65,10 +73,15 @@ const ScanPage = () => {
     setExtractedEquation(null);
     setSolution(null);
     setProcessingProgress(0);
+    setShowOriginal(false);
   };
 
   const openCamera = () => {
     setIsCameraOpen(true);
+  };
+  
+  const toggleImageView = () => {
+    setShowOriginal(!showOriginal);
   };
   
   return (
@@ -110,7 +123,7 @@ const ScanPage = () => {
                 <div className="aspect-[4/3] bg-gray-900 relative">
                   {capturedImage ? (
                     <img 
-                      src={processedImage || capturedImage} 
+                      src={showOriginal ? capturedImage : (processedImage || capturedImage)} 
                       alt="Captured equation" 
                       className="w-full h-full object-contain"
                     />
@@ -141,10 +154,22 @@ const ScanPage = () => {
                 </div>
                 
                 {capturedImage && (
-                  <div className="p-4 flex justify-center">
+                  <div className="p-4 flex justify-between items-center">
                     <Button variant="outline" onClick={handleReset}>
                       Scan Another Equation
                     </Button>
+                    
+                    {processedImage && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={toggleImageView} 
+                        className="flex items-center gap-1 text-xs"
+                      >
+                        <ImageIcon size={14} />
+                        {showOriginal ? "Show Processed" : "Show Original"}
+                      </Button>
+                    )}
                   </div>
                 )}
               </div>
@@ -153,7 +178,7 @@ const ScanPage = () => {
                 <div className="aspect-[4/3] bg-gray-900 relative">
                   {capturedImage && (
                     <img 
-                      src={processedImage || capturedImage} 
+                      src={showOriginal ? capturedImage : (processedImage || capturedImage)} 
                       alt="Captured equation" 
                       className="w-full h-full object-contain"
                     />
@@ -171,10 +196,22 @@ const ScanPage = () => {
                   )}
                 </div>
                 
-                <div className="p-4 flex justify-center">
+                <div className="p-4 flex justify-between items-center">
                   <Button variant="outline" onClick={handleReset}>
                     Scan Another Equation
                   </Button>
+                  
+                  {processedImage && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={toggleImageView} 
+                      className="flex items-center gap-1 text-xs"
+                    >
+                      <ImageIcon size={14} />
+                      {showOriginal ? "Show Processed" : "Show Original"}
+                    </Button>
+                  )}
                 </div>
               </div>
             )}

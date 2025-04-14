@@ -1,7 +1,7 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Copy, Check, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Copy, Check, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from '@/components/ui/progress';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -25,6 +25,7 @@ const SolutionDisplay: React.FC<SolutionDisplayProps> = ({
 }) => {
   const { toast } = useToast();
   const [copied, setCopied] = React.useState(false);
+  const [showSteps, setShowSteps] = useState(true);
   
   const copyToClipboard = () => {
     const text = `Equation: ${equation}\n\nSolution: ${solution}\n\nSteps:\n${steps.join('\n')}`;
@@ -52,7 +53,7 @@ const SolutionDisplay: React.FC<SolutionDisplayProps> = ({
         
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-8">
-            <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+            <div className="w-16 h-16 rounded-full border-4 border-primary border-t-transparent animate-spin mb-4"></div>
             <p className="text-gray-600 dark:text-gray-400 mb-4">
               {processingPhase === 'recognizing' 
                 ? 'Preprocessing and recognizing equation...' 
@@ -70,21 +71,49 @@ const SolutionDisplay: React.FC<SolutionDisplayProps> = ({
             <div className="mb-6">
               <h3 className="text-lg font-medium text-gray-700 mb-2">Solution</h3>
               <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
-                <p className="font-mono text-lg text-gray-900 dark:text-gray-100">{solution}</p>
+                <p className="font-mono text-xl font-bold text-primary dark:text-primary">{solution}</p>
               </div>
             </div>
             
             <div>
-              <h3 className="text-lg font-medium text-gray-700 mb-2">Steps</h3>
-              <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-100 dark:border-gray-700">
-                <ol className="list-decimal list-inside space-y-2 font-mono text-gray-700 dark:text-gray-300">
-                  {steps.map((step, index) => (
-                    <li key={index} className="animate-slide-up" style={{ animationDelay: `${index * 100}ms` }}>
-                      {step}
-                    </li>
-                  ))}
-                </ol>
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="text-lg font-medium text-gray-700">Steps</h3>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setShowSteps(!showSteps)}
+                  className="flex items-center gap-1"
+                >
+                  {showSteps ? (
+                    <>
+                      <ChevronUp className="h-4 w-4" />
+                      <span className="text-sm">Hide Steps</span>
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="h-4 w-4" />
+                      <span className="text-sm">Show Steps</span>
+                    </>
+                  )}
+                </Button>
               </div>
+              
+              {showSteps && (
+                <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-100 dark:border-gray-700">
+                  <ol className="space-y-4 font-mono text-gray-700 dark:text-gray-300">
+                    {steps.map((step, index) => (
+                      <li key={index} className="animate-fade-in p-3 bg-white dark:bg-gray-800 rounded-md shadow-sm" style={{ animationDelay: `${index * 100}ms` }}>
+                        <div className="flex items-start">
+                          <span className="bg-primary/10 text-primary w-6 h-6 flex items-center justify-center rounded-full text-sm mr-3">
+                            {index + 1}
+                          </span>
+                          <div>{step}</div>
+                        </div>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              )}
             </div>
             
             <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">

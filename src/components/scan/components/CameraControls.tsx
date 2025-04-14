@@ -33,14 +33,14 @@ const CameraControls: React.FC<CameraControlsProps> = ({
 
   if (isCameraActive && !capturedImage && !isScanning) {
     return (
-      <div className="absolute bottom-10 left-0 right-0 flex justify-center">
+      <div className="absolute bottom-8 left-0 right-0 flex justify-center">
         <button 
-          className="w-16 h-16 rounded-full bg-white border-4 border-primary shadow-lg focus:outline-none relative"
+          className="w-20 h-20 rounded-full bg-white shadow-lg focus:outline-none relative"
           onClick={captureImage}
           disabled={isScanning}
         >
-          <div className="absolute inset-2 rounded-full bg-primary/10"></div>
-          <div className="absolute inset-4 rounded-full bg-primary"></div>
+          <div className="absolute inset-1 rounded-full bg-primary/10 border-4 border-primary"></div>
+          <div className="absolute inset-3 rounded-full bg-primary"></div>
         </button>
       </div>
     );
@@ -48,14 +48,12 @@ const CameraControls: React.FC<CameraControlsProps> = ({
 
   if (capturedImage) {
     return (
-      <div className="absolute bottom-10 left-0 right-0 flex justify-center space-x-6">
-        <Button variant="outline" onClick={resetCamera} className="bg-gray-800/80 text-white border-gray-600">
-          <RefreshCw className="w-4 h-4 mr-2" />
-          Retake
+      <div className="absolute bottom-8 left-0 right-0 flex justify-center space-x-8">
+        <Button onClick={resetCamera} className="w-16 h-16 rounded-full bg-gray-800/80 text-white border border-gray-600">
+          <RefreshCw className="w-6 h-6" />
         </Button>
-        <Button onClick={confirmImage} className="bg-primary/90 hover:bg-primary text-white">
-          <CheckCircle className="w-4 h-4 mr-2" />
-          Use Photo
+        <Button onClick={confirmImage} className="w-16 h-16 rounded-full bg-primary text-white">
+          <CheckCircle className="w-6 h-6" />
         </Button>
       </div>
     );

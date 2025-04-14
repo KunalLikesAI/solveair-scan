@@ -50,8 +50,15 @@ const CameraView: React.FC<CameraViewProps> = ({ onCapture }) => {
       
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current?.play().catch(e => {
+            console.error("Error playing video:", e);
+            setCameraError("Failed to start video stream. Please check permissions.");
+          });
+        };
         streamRef.current = stream;
         setIsCameraActive(true);
+        console.log("Camera started successfully");
       }
     } catch (error) {
       console.error('Error accessing camera:', error);
@@ -78,7 +85,6 @@ const CameraView: React.FC<CameraViewProps> = ({ onCapture }) => {
       if (image && image.dataUrl) {
         setCapturedImage(image.dataUrl);
         setIsScanning(false);
-        setIsCameraActive(false);
       }
     } catch (error) {
       console.error('Error taking picture with Capacitor:', error);
@@ -219,16 +225,17 @@ const CameraView: React.FC<CameraViewProps> = ({ onCapture }) => {
   }, []);
 
   return (
-    <div className="w-full">
-      <div className="glass-card rounded-xl overflow-hidden relative">
+    <div className="w-full h-full">
+      <div className="glass-card rounded-xl overflow-hidden relative w-full h-full">
         {/* Camera view - Web only */}
         {isCameraActive && !capturedImage && !isMobileDevice && (
-          <div className="aspect-[4/3] bg-gray-900 relative">
+          <div className="aspect-[4/3] bg-gray-900 relative w-full h-full">
             <video 
               ref={videoRef} 
               autoPlay 
               playsInline 
               className="w-full h-full object-cover"
+              style={{ display: 'block' }}
             />
             
             {/* Scanning guide */}

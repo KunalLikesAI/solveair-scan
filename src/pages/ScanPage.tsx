@@ -7,6 +7,13 @@ import { processEquationImage, solveEquation, SolveResult } from '@/utils/mathSo
 import { Button } from '@/components/ui/button';
 import { History, Scan, ScanText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle 
+} from "@/components/ui/dialog";
 
 const ScanPage = () => {
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
@@ -16,13 +23,16 @@ const ScanPage = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSolving, setIsSolving] = useState(false);
   const [processingProgress, setProcessingProgress] = useState<number>(0);
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
   const { toast } = useToast();
   
   // Handle image capture from camera
   const handleImageCapture = async (imageData: string) => {
     setCapturedImage(imageData);
+    setProcessedImage(imageData);
     setIsProcessing(true);
     setProcessingProgress(10);
+    setIsCameraOpen(false); // Close the camera view
     
     try {
       // Process image to extract equation
@@ -65,6 +75,11 @@ const ScanPage = () => {
     setSolution(null);
     setProcessingProgress(0);
   };
+
+  // Open Camera in full screen dialog
+  const openCamera = () => {
+    setIsCameraOpen(true);
+  };
   
   return (
     <Layout>
@@ -102,7 +117,48 @@ const ScanPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div>
             {!solution ? (
-              <CameraView onCapture={handleImageCapture} />
+              <div className="glass-card rounded-xl overflow-hidden">
+                <div className="aspect-[4/3] bg-gray-900 relative">
+                  {capturedImage ? (
+                    <img 
+                      src={processedImage || capturedImage} 
+                      alt="Captured equation" 
+                      className="w-full h-full object-contain"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center">
+                      <Scan className="w-12 h-12 text-primary mb-4" />
+                      <p className="text-white text-lg mb-4">Ready to scan an equation?</p>
+                      <Button 
+                        onClick={openCamera}
+                        size="lg"
+                        className="bg-primary hover:bg-primary/90"
+                      >
+                        Open Camera
+                      </Button>
+                    </div>
+                  )}
+                  
+                  {extractedEquation && (
+                    <div className="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-sm p-4">
+                      <div className="flex items-center space-x-2">
+                        <ScanText className="w-4 h-4 text-primary" />
+                        <p className="text-white font-mono">
+                          Detected: <span className="text-primary">{extractedEquation}</span>
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                {capturedImage && (
+                  <div className="p-4 flex justify-center">
+                    <Button variant="outline" onClick={handleReset}>
+                      Scan Another Equation
+                    </Button>
+                  </div>
+                )}
+              </div>
             ) : (
               <div className="glass-card rounded-xl overflow-hidden">
                 <div className="aspect-[4/3] bg-gray-900 relative">
@@ -173,6 +229,15 @@ const ScanPage = () => {
           </div>
         </div>
       </div>
+      
+      {/* Full-screen camera dialog */}
+      <Dialog open={isCameraOpen} onOpenChange={setIsCameraOpen}>
+        <DialogContent className="max-w-full w-full h-[90vh] p-0 sm:p-0">
+          <div className="w-full h-full flex flex-col">
+            <CameraView onCapture={handleImageCapture} />
+          </div>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };

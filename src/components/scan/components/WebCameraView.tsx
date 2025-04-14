@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { X, Flash } from 'lucide-react';
+import { X, Zap } from 'lucide-react'; // Replace 'Flash' with 'Zap'
 import { Button } from '@/components/ui/button';
 import CameraGuide from './CameraGuide';
 import CameraScanLine from './CameraScanLine';
@@ -44,7 +44,7 @@ const WebCameraView: React.FC<WebCameraViewProps> = ({
           className="rounded-full bg-black/20 backdrop-blur-sm border-white/10 text-white hover:bg-black/30"
           onClick={toggleFlash}
         >
-          <Flash className={`w-4 h-4 ${flashMode ? 'text-yellow-400' : 'text-white/70'}`} />
+          <Zap className={`w-4 h-4 ${flashMode ? 'text-yellow-400' : 'text-white/70'}`} />
         </Button>
         <Button 
           variant="outline" 

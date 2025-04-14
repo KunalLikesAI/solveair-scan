@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Layout from '@/components/layout/Layout';
 import CameraView from '@/components/scan/CameraView';
@@ -37,7 +36,6 @@ const ScanPage = () => {
     try {
       setProcessingProgress(30);
       
-      // Analyze the image to extract the equation
       const analysisResult = await analyzeEquationImage(imageData);
       setProcessedImage(analysisResult.processedImage);
       setExtractedEquation(analysisResult.extractedEquation);
@@ -46,7 +44,6 @@ const ScanPage = () => {
       setIsSolving(true);
       setIsProcessing(false);
       
-      // Solve the extracted equation
       const result = await solveEquation(analysisResult.extractedEquation);
       setSolution(result);
       
@@ -257,7 +254,11 @@ const ScanPage = () => {
       </div>
       
       <Dialog open={isCameraOpen} onOpenChange={setIsCameraOpen}>
-        <DialogContent className="max-w-full w-full h-[90vh] p-0 sm:p-0">
+        <DialogContent className="max-w-full w-full sm:max-w-[95vw] h-[90vh] p-0 sm:p-0 border-none bg-black">
+          <DialogTitle className="sr-only">Camera Scanner</DialogTitle>
+          <DialogDescription className="sr-only">
+            Take a photo of a math equation to solve
+          </DialogDescription>
           <div className="w-full h-full flex flex-col">
             <CameraView onCapture={handleImageCapture} />
           </div>

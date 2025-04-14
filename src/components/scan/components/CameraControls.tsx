@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { RefreshCw, Focus } from 'lucide-react';
+import { RefreshCw, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface CameraControlsProps {
@@ -33,29 +33,29 @@ const CameraControls: React.FC<CameraControlsProps> = ({
 
   if (isCameraActive && !capturedImage && !isScanning) {
     return (
-      <div className="mt-6 flex justify-center">
-        <Button 
-          size="lg" 
-          className="rounded-full w-16 h-16 p-0 flex items-center justify-center shadow-lg"
+      <div className="absolute bottom-10 left-0 right-0 flex justify-center">
+        <button 
+          className="w-16 h-16 rounded-full bg-white border-4 border-primary shadow-lg focus:outline-none relative"
           onClick={captureImage}
           disabled={isScanning}
         >
-          <div className="w-12 h-12 rounded-full border-2 border-white" />
-        </Button>
+          <div className="absolute inset-2 rounded-full bg-primary/10"></div>
+          <div className="absolute inset-4 rounded-full bg-primary"></div>
+        </button>
       </div>
     );
   }
 
   if (capturedImage) {
     return (
-      <div className="mt-6 flex justify-center space-x-4">
-        <Button variant="outline" onClick={resetCamera}>
+      <div className="absolute bottom-10 left-0 right-0 flex justify-center space-x-6">
+        <Button variant="outline" onClick={resetCamera} className="bg-gray-800/80 text-white border-gray-600">
           <RefreshCw className="w-4 h-4 mr-2" />
           Retake
         </Button>
-        <Button onClick={confirmImage}>
-          <Focus className="w-4 h-4 mr-2" />
-          Process Equation
+        <Button onClick={confirmImage} className="bg-primary/90 hover:bg-primary text-white">
+          <CheckCircle className="w-4 h-4 mr-2" />
+          Use Photo
         </Button>
       </div>
     );

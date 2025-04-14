@@ -1,6 +1,6 @@
 
-import React, { useRef, useEffect } from 'react';
-import { X } from 'lucide-react';
+import React from 'react';
+import { X, Flash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import CameraGuide from './CameraGuide';
 import CameraScanLine from './CameraScanLine';
@@ -21,7 +21,7 @@ const WebCameraView: React.FC<WebCameraViewProps> = ({
   videoRef 
 }) => {
   return (
-    <div className="aspect-[4/3] bg-gray-900 relative w-full h-full">
+    <div className="aspect-[9/16] bg-gray-900 relative w-full h-full">
       <video 
         ref={videoRef} 
         autoPlay 
@@ -30,7 +30,7 @@ const WebCameraView: React.FC<WebCameraViewProps> = ({
         style={{ display: 'block' }}
       />
       
-      {/* Scanning guide */}
+      {/* Scanning guide overlay */}
       <CameraGuide />
       
       {/* Scanning animation */}
@@ -44,7 +44,7 @@ const WebCameraView: React.FC<WebCameraViewProps> = ({
           className="rounded-full bg-black/20 backdrop-blur-sm border-white/10 text-white hover:bg-black/30"
           onClick={toggleFlash}
         >
-          <div className={`w-3 h-3 rounded-full ${flashMode ? 'bg-yellow-400' : 'bg-gray-400'}`}></div>
+          <Flash className={`w-4 h-4 ${flashMode ? 'text-yellow-400' : 'text-white/70'}`} />
         </Button>
         <Button 
           variant="outline" 
